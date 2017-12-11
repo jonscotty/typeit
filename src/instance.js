@@ -7,6 +7,7 @@ export default class Instance {
     this.queue = [];
     this.queueIndex = 0;
     this.hasStarted = false;
+    this.isPaused = false;
     this.inTag = false;
     this.stringsToDelete = "";
     this.style =
@@ -94,7 +95,7 @@ export default class Instance {
 
   startQueue() {
     setTimeout(() => {
-      this.executeQueue();
+      this.next();
     }, this.options.startDelay);
   }
 
@@ -199,14 +200,14 @@ export default class Instance {
 
   break() {
     this.insert("<br>");
-    this.executeQueue();
+    this.next();
   }
 
   pause(time) {
     time = time === undefined ? this.options.nextStringDelay : time;
 
     setTimeout(() => {
-      this.executeQueue();
+      this.next();
     }, time);
   }
 
@@ -310,7 +311,7 @@ export default class Instance {
       if (string.length) {
         this.type(string, false);
       } else {
-        this.executeQueue();
+        this.next();
       }
     }, this.typePace);
   }
@@ -327,7 +328,7 @@ export default class Instance {
     });
   }
 
-  setOptions(settings, defaults = null, autoExecuteQueue = true) {
+  setOptions(settings, defaults = null, autonext = true) {
     let mergedSettings = {};
 
     if (defaults === null) {
@@ -344,8 +345,8 @@ export default class Instance {
 
     this.options = mergedSettings;
 
-    if (autoExecuteQueue) {
-      this.executeQueue();
+    if (autonext) {
+      this.next();
     }
   }
 
@@ -440,7 +441,7 @@ export default class Instance {
       if (amount > (chars === null ? 0 : 2)) {
         this.delete(chars === null ? null : chars - 1);
       } else {
-        this.executeQueue();
+        this.next();
       }
     }, this.deletePace);
   }
@@ -450,10 +451,19 @@ export default class Instance {
   */
   empty() {
     this.elementContainer.innerHTML = "";
-    this.executeQueue();
+    this.next();
   }
 
-  executeQueue() {
+  next() {
+
+    console.log('next');
+    console.log(this.isPaused);
+
+    if(this.isPaused) {
+      console.log('paused!');
+      return;
+    }
+
     if (this.queueIndex < this.queue.length) {
       let thisFunc = this.queue[this.queueIndex];
       this.queueIndex++;

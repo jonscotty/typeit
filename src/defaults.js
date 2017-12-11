@@ -15,3 +15,5 @@ window.TypeItDefaults = {
   autoStart: true,
   callback: function() {}
 };
+
+console.log('defaults');

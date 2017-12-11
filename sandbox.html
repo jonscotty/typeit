@@ -34,7 +34,7 @@
       <h3 id="example1"></h3>
     </section>
 
-    <section>
+<!--     <section>
       <h2>Multiple Strings</h2>
       <h3 id="example2"></h3>
     </section>
@@ -53,19 +53,18 @@
       <h2>Companion Functions</h2>
       <h3 id="example5"></h3>
     </section>
-
-    <section>
-      <h2>Hard-Coded String</h2>
-      <h3 id="example6"><!-- This comment should be removed automatically. Don't worry about it being typed. -->This string is hard-coded!</h3>
-    </section>
-
+-->
     <script src="dist/typeit.js"></script>
 
 		<script>
-      new TypeIt('#example1', {
-        speed: 50,
-        strings: 'Just a simple string.'
+      var example1 = new TypeIt('#example1', {
+        speed: 400,
+        strings: 'Just a simple string. Now it is longer because I am testing something!'
       });
+
+      setTimeout(() => {
+        example1.forcePause();
+      }, 1000);
 
       new TypeIt('#example2', {
         speed: 50,

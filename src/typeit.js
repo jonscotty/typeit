@@ -93,4 +93,12 @@ export default class TypeIt {
     this.pushAction("setOptions", options);
     return this;
   }
+
+  forcePause() {
+    this.instances.forEach((instance) => {
+      instance.isPaused = true;
+    });
+    // this.pushAction("setOptions", options);
+    return this;
+  }
 }
