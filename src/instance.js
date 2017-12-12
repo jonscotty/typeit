@@ -54,13 +54,58 @@ export default class Instance {
   }
 
   generateQueue() {
-    for (let i = 0; i < this.options.strings.length; i++) {
-      this.queue.push([this.type, this.options.strings[i]]);
+    this.options.strings.forEach((string, index) => {
 
-      if (i < this.options.strings.length - 1) {
+      this.queueUpString(string);
+
+      //-- This is not the last string, so insert a pause for between strings.
+      if (index + 1 < this.options.strings.length) {
         this.queue.push([this.options.breakLines ? this.break : this.delete]);
         this.insertPauseIntoQueue(this.queue.length);
       }
+
+    });
+  }
+
+  /**
+   * Add steps to the queue for each character in a given string.
+   */
+  queueUpString(string, rake = true) {
+    string = this.toArray(string);
+
+    //-- If it's designated, rake that bad boy for HTML tags and stuff.
+    if (rake) {
+      string = this.rake(string);
+      string = string[0];
+    }
+
+    //-- Randomize the timeout each time, if that's your thing.
+    this.setPace(this);
+
+    //-- If an opening HTML tag is found and we're not already printing inside a tag
+    if (
+      this.options.html &&
+      (string[0].indexOf("<") !== -1 && string[0].indexOf("</") === -1)
+    ) {
+
+      //-- Create node of that string name.
+      let matches = string[0].match(/\<(.*?)\>/);
+      let doc = document.implementation.createHTMLDocument();
+      doc.body.innerHTML = "<" + matches[1] + "></" + matches[1] + ">";
+
+      //-- Add to the queue.
+      this.queue.push([this.type, doc.body.children[0]]);
+
+    } else {
+      this.queue.push([this.type, string[0]]);
+    }
+
+    //-- Shorten it by one character.
+    string.splice(0, 1);
+
+    //-- If there's more to it, run again until fully printed.
+    if (string.length) {
+      this.queueUpString(string, false);
     }
   }
 
@@ -163,6 +208,7 @@ export default class Instance {
    * Appends string to element container.
    */
   insert(content, toChildNode = false) {
+
     if (toChildNode) {
       this.elementContainer.lastChild.insertAdjacentHTML("beforeend", content);
     } else {
@@ -204,11 +250,9 @@ export default class Instance {
   }
 
   pause(time) {
-    time = time === undefined ? this.options.nextStringDelay : time;
-
     setTimeout(() => {
       this.next();
-    }, time);
+    }, time === undefined ? this.options.nextStringDelay : time);
   }
 
   /*
@@ -218,6 +262,7 @@ export default class Instance {
   */
   rake(array) {
     return array.map(item => {
+
       //-- Convert string to array.
       item = item.split("");
 
@@ -248,71 +293,25 @@ export default class Instance {
   }
 
   print(character) {
-    if (this.inTag) {
-      this.insert(character, true);
 
-      if (this.tagCount < this.tagDuration) {
-        this.tagCount++;
-      } else {
-        this.inTag = false;
-      }
-    } else {
-      this.insert(character);
+    //-- We must have an HTML tag!
+    if(typeof character !== 'string') {
+      this.elementContainer.appendChild(character);
+      this.inTag = true;
+      return;
     }
+
+    if(character.startsWith('</')) {
+      this.inTag = false;
+    }
+
+    this.insert(character, this.inTag);
   }
 
-  /**
-   * Pass in a string, and loop over that string until empty. Then return true.
-   */
-  type(string, rake = true) {
-    string = this.toArray(string);
-
-    //-- If it's designated, rake that bad boy for HTML tags and stuff.
-    if (rake) {
-      string = this.rake(string);
-      string = string[0];
-    }
-
+  type(character) {
     this.timeouts[0] = setTimeout(() => {
-      //-- Randomize the timeout each time, if that's your thing.
-      this.setPace(this);
-
-      //-- If an opening HTML tag is found and we're not already printing inside a tag
-      if (
-        this.options.html &&
-        (string[0].indexOf("<") !== -1 && string[0].indexOf("</") === -1) &&
-        !this.inTag
-      ) {
-        //-- loop the string to find where the tag ends
-        for (let i = string.length - 1; i >= 0; i--) {
-          if (string[i].indexOf("</") !== -1) {
-            this.tagCount = 1;
-            this.tagDuration = i;
-          }
-        }
-
-        this.inTag = true;
-
-        //-- Create node of that string name.
-        let matches = string[0].match(/\<(.*?)\>/);
-        let doc = document.implementation.createHTMLDocument();
-        doc.body.innerHTML = "<" + matches[1] + "></" + matches[1] + ">";
-
-        //-- Add that new node to the element.
-        this.elementContainer.appendChild(doc.body.children[0]);
-      } else {
-        this.print(string[0]);
-      }
-
-      //-- Shorten it by one character.
-      string.splice(0, 1);
-
-      //-- If there's more to it, run again until fully printed.
-      if (string.length) {
-        this.type(string, false);
-      } else {
-        this.next();
-      }
+      this.print(character);
+      this.next();
     }, this.typePace);
   }
 
@@ -323,6 +322,7 @@ export default class Instance {
     let helperElements = this.element.querySelectorAll(
       ".ti-container, .ti-cursor, .ti-placeholder"
     );
+
     [].forEach.call(helperElements, helperElement => {
       this.element.removeChild(helperElement);
     });
@@ -456,13 +456,10 @@ export default class Instance {
 
   next() {
 
-    console.log('next');
-    console.log(this.isPaused);
-
-    if(this.isPaused) {
-      console.log('paused!');
-      return;
-    }
+    // if(this.isPaused) {
+    //   console.log('paused!');
+    //   return;
+    // }
 
     if (this.queueIndex < this.queue.length) {
       let thisFunc = this.queue[this.queueIndex];
