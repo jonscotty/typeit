@@ -3,6 +3,7 @@
 The Most Versatile JavaScript Animated Typing Utility on the Planet
 
 [![Build Status](https://travis-ci.org/alexmacarthur/typeit.svg?branch=master)](https://travis-ci.org/alexmacarthur/typeit)
+[![npm downloads](https://img.shields.io/npm/dm/typeit.svg?style=flat-square)](http://npm-stat.com/charts.html?package=typeit)
 
 ## Table of Contents
 * [Overview](#overview)
